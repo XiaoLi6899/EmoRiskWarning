@@ -216,10 +216,25 @@ const App: React.FC = () => {
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col h-[400px]">
                 {/* Chart Header with Controls */}
                 <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-800">综合心理预警监测</h2>
+                  <div 
+                    onClick={() => setSelectedMetric('composite')}
+                    className={`group cursor-pointer transition-all ${selectedMetric !== 'composite' ? 'hover:bg-slate-50 -ml-2 px-2 py-1 rounded-lg' : ''}`}
+                    title="点击返回综合视图"
+                  >
+                    <div className="flex items-center gap-2">
+                        <h2 className={`text-lg font-bold transition-colors ${selectedMetric === 'composite' ? 'text-slate-800' : 'text-indigo-600 group-hover:text-indigo-700'}`}>
+                          综合心理预警监测
+                        </h2>
+                        {selectedMetric !== 'composite' && (
+                            <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold animate-pulse">
+                                点击返回总览
+                            </span>
+                        )}
+                    </div>
                     <p className="text-xs text-slate-400 mt-1">
-                      {selectedMetric === 'composite' ? '基于面部识别数据的综合风险指数' : '单击卡片切换不同指标趋势'}
+                      {selectedMetric === 'composite' 
+                        ? '基于面部识别数据的综合风险指数' 
+                        : '当前展示特定指标详情，点击标题此处可查看综合风险趋势'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-1">
