@@ -2,15 +2,26 @@ import React from 'react';
 import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Legend } from 'recharts';
 import { DailyEmotionMetrics } from '../types';
 
+export type MetricKey = 'composite' | 'stress' | 'aggression' | 'negative' | 'instability';
+
 interface MoodTrendChartProps {
   data: DailyEmotionMetrics[];
+  activeMetric: MetricKey;
 }
+
+const METRIC_CONFIG: Record<MetricKey, { label: string; color: string; key: string }> = {
+  composite: { label: '综合风险指数', color: '#4f46e5', key: 'compositeScore' },
+  stress: { label: '压力指数 (Stress)', color: '#4f46e5', key: 'details.stress' }, // Indigo
+  aggression: { label: '攻击性倾向 (Aggression)', color: '#e11d48', key: 'details.aggression' }, // Red
+  negative: { label: '负面情绪 (Negative)', color: '#2563eb', key: 'details.negative' }, // Blue
+  instability: { label: '情绪波动 (Instability)', color: '#d97706', key: 'details.instability' } // Amber
+};
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload as DailyEmotionMetrics;
     return (
-      <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-lg text-sm min-w-[200px]">
+      <div className="bg-white p-4 border border-slate-200 shadow-xl rounded-lg text-sm min-w-[200px] z-50">
         <p className="font-bold text-slate-800 mb-2 border-b border-slate-100 pb-2">{label}</p>
         
         <div className="flex justify-between items-center mb-3">
@@ -72,54 +83,61 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const MoodTrendChart: React.FC<MoodTrendChartProps> = ({ data }) => {
+const MoodTrendChart: React.FC<MoodTrendChartProps> = ({ data, activeMetric }) => {
+  const config = METRIC_CONFIG[activeMetric];
+  const isComposite = activeMetric === 'composite';
+
   return (
-    <div className="h-[380px] w-full">
+    <div className="h-[340px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.1}/>
-              <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+            <linearGradient id="colorComposite" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={isComposite ? config.color : "#94a3b8"} stopOpacity={isComposite ? 0.2 : 0.05}/>
+              <stop offset="95%" stopColor={isComposite ? config.color : "#94a3b8"} stopOpacity={0}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
           <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10}/>
           <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={[0, 100]}/>
           <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#cbd5e1', strokeWidth: 1 }} />
-          <Legend verticalAlign="top" height={36} wrapperStyle={{top: -10}}/>
+          <Legend verticalAlign="top" height={36} wrapperStyle={{top: -10}} iconType="circle"/>
           
           <ReferenceLine y={60} stroke="#f43f5e" strokeDasharray="3 3" label={{ value: '预警阈值', fill: '#f43f5e', fontSize: 10, position: 'right' }} />
           
+          {/* Always show Baseline */}
           <Line 
-            name="个体基线 (10次有效均值)" 
+            name="个体基线" 
             type="monotone" 
             dataKey="baselineScore" 
-            stroke="#94a3b8" 
+            stroke="#cbd5e1" 
             strokeWidth={2} 
             strokeDasharray="5 5" 
             dot={false} 
           />
 
+          {/* Background Composite Area (Subtle when specific metric selected) */}
           <Area 
             type="monotone" 
             dataKey="compositeScore" 
             stroke="none" 
-            fill="url(#colorRisk)" 
+            fill="url(#colorComposite)" 
           />
-          
+
+          {/* Main Active Line */}
           <Line 
-            name="综合风险指数" 
+            name={config.label} 
             type="monotone" 
-            dataKey="compositeScore" 
-            stroke="#4f46e5" 
+            dataKey={config.key} 
+            stroke={config.color} 
             strokeWidth={3} 
             dot={(props: any) => {
               const { cx, cy, payload } = props;
-              if (payload.isAlert) {
+              // Only show red alert dots on composite view or if specific value is high
+              if (payload.isAlert && isComposite) {
                 return <circle cx={cx} cy={cy} r={5} fill="#f43f5e" stroke="#fff" strokeWidth={2} key={payload.date}/>;
               }
-              return <circle cx={cx} cy={cy} r={3} fill="#4f46e5" strokeWidth={0} key={payload.date}/>;
+              return <circle cx={cx} cy={cy} r={3} fill={config.color} strokeWidth={0} key={payload.date}/>;
             }}
             activeDot={{ r: 6, strokeWidth: 0 }}
           />

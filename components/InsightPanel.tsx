@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Brain, CheckCircle2, AlertTriangle, RefreshCw, Target, FileText, Microscope } from 'lucide-react';
+import { Brain, RefreshCw, Fingerprint, HeartPulse, Sprout, ShieldAlert, Tag } from 'lucide-react';
 import { StudentProfile, DailyEmotionMetrics, AIAnalysisResult, TrajectoryNode } from '../types';
 import { generateStudentReport } from '../services/geminiService';
 
@@ -30,15 +30,66 @@ const InsightPanel: React.FC<InsightPanelProps> = ({ student, history, trajector
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const renderTags = (content: string, colorClass: string, bgClass: string, borderClass: string) => {
+    // Split by pipe | or newline or Chinese comma
+    const tags = content.split(/[||\n，]/).map(t => t.trim()).filter(t => t.length > 0);
+    
+    return (
+      <div className="flex flex-wrap gap-2 mt-2">
+        {tags.map((tag, idx) => (
+          <span 
+            key={idx} 
+            className={`px-2.5 py-1 rounded-md text-xs font-bold border ${bgClass} ${colorClass} ${borderClass} shadow-sm`}
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+    );
+  };
+
+  const renderCard = (title: string, content: string, icon: React.ReactNode, baseColor: 'indigo' | 'rose' | 'emerald' | 'amber') => {
+    
+    let styles = {
+      text: 'text-indigo-600',
+      bg: 'bg-indigo-50',
+      border: 'border-indigo-100',
+      iconBg: 'bg-indigo-100'
+    };
+
+    if (baseColor === 'rose') {
+      styles = { text: 'text-rose-700', bg: 'bg-rose-50', border: 'border-rose-100', iconBg: 'bg-rose-100' };
+    } else if (baseColor === 'emerald') {
+      styles = { text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100', iconBg: 'bg-emerald-100' };
+    } else if (baseColor === 'amber') {
+      styles = { text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-100', iconBg: 'bg-amber-100' };
+    }
+
+    return (
+      <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="flex items-center gap-2 mb-1">
+          <div className={`p-1.5 rounded-lg ${styles.iconBg} ${styles.text}`}>
+            {icon}
+          </div>
+          <h3 className="font-bold text-slate-700 text-sm">{title}</h3>
+        </div>
+        {renderTags(content, styles.text, styles.bg, styles.border)}
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-purple-50/50 to-white">
+      <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-purple-100 rounded-lg text-purple-600">
-            <Brain size={18} />
+          <div className="p-1.5 bg-indigo-600 rounded-lg text-white shadow-md shadow-indigo-200">
+            <Tag size={18} />
           </div>
-          <h2 className="font-bold text-slate-800">AI 深度归因分析</h2>
+          <div>
+            <h2 className="font-bold text-slate-800 text-sm">智能画像标签</h2>
+            <p className="text-[10px] text-slate-400">AI Generated Profile Tags</p>
+          </div>
         </div>
         <button 
           onClick={fetchAnalysis} 
@@ -50,81 +101,52 @@ const InsightPanel: React.FC<InsightPanelProps> = ({ student, history, trajector
       </div>
 
       {/* Content */}
-      <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
+      <div className="p-4 flex-1 overflow-y-auto custom-scrollbar bg-[#f8fafc]">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-full space-y-4 text-slate-400">
-             <div className="animate-pulse bg-slate-100 w-full h-20 rounded-xl"></div>
-             <div className="animate-pulse bg-slate-100 w-3/4 h-6 rounded-xl"></div>
-             <div className="animate-pulse bg-slate-100 w-full h-32 rounded-xl"></div>
+          <div className="flex flex-col gap-4 animate-pulse">
+             <div className="bg-slate-200 h-24 rounded-xl w-full"></div>
+             <div className="bg-slate-200 h-24 rounded-xl w-full"></div>
+             <div className="bg-slate-200 h-24 rounded-xl w-full"></div>
+             <div className="bg-slate-200 h-24 rounded-xl w-full"></div>
           </div>
         ) : analysis ? (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 pb-2">
             
-            {/* Deep Root Cause */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Microscope size={16} className="text-indigo-600"/>
-                <h3 className="text-sm font-bold text-slate-700">深层原因推测</h3>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                    analysis.primaryFactor === 'academic' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                    analysis.primaryFactor === 'family' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                    'bg-slate-50 text-slate-600 border-slate-100'
-                }`}>
-                    {analysis.primaryFactor === 'academic' ? '学业因素' : 
-                     analysis.primaryFactor === 'family' ? '家庭因素' : 
-                     analysis.primaryFactor === 'social' ? '社交因素' : '待排查'}
-                </span>
-              </div>
-              <p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
-                {analysis.rootCauseAnalysis}
-              </p>
-            </div>
-
-            {/* Trajectory Insight */}
-            {analysis.trajectoryInsight && (
-                <div className="bg-rose-50 rounded-xl p-4 border border-rose-100">
-                <h3 className="flex items-center gap-2 text-rose-800 font-bold text-sm mb-2">
-                    <AlertTriangle size={16} />
-                    轨迹异常洞察 (Missing Analysis)
-                </h3>
-                <p className="text-rose-900/80 text-sm">
-                    {analysis.trajectoryInsight}
-                </p>
-                </div>
+            {/* 1. Core Characteristics */}
+            {renderCard(
+              "核心特征与行为模式", 
+              analysis.coreCharacteristics, 
+              <Fingerprint size={16} />, 
+              "indigo"
             )}
 
-            {/* Interventions & Feedback Loop */}
-            <div>
-              <h3 className="flex items-center gap-2 text-slate-800 font-bold text-sm mb-3">
-                <Target size={16} className="text-emerald-600"/>
-                干预与反馈迭代
-              </h3>
-              
-              {/* Questionnaire Recommendation */}
-              <div className="mb-3 flex items-center gap-3 p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-800">
-                <FileText size={18} className="flex-shrink-0"/>
-                <div>
-                    <div className="text-xs text-indigo-600/70 uppercase font-semibold">推荐测评工具</div>
-                    <div className="text-sm font-bold">{analysis.questionnaireType}</div>
-                </div>
-              </div>
+            {/* 2. Mental Health */}
+            {renderCard(
+              "心理健康情况评估", 
+              analysis.mentalHealthAssessment, 
+              <HeartPulse size={16} />, 
+              "rose"
+            )}
 
-              <div className="space-y-2">
-                {analysis.suggestedIntervention?.length > 0 ? (
-                  analysis.suggestedIntervention.map((item, idx) => (
-                    <div key={idx} className="flex gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm group hover:border-indigo-200 transition-colors">
-                      <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-slate-600 group-hover:text-slate-800 transition-colors">{item}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-slate-400 italic pl-2">暂无建议。</div>
-                )}
-              </div>
-            </div>
+            {/* 3. Development Potential */}
+            {renderCard(
+              "发展潜力评估", 
+              analysis.developmentPotential, 
+              <Sprout size={16} />, 
+              "emerald"
+            )}
+
+            {/* 4. Support Strategies */}
+            {renderCard(
+              "支持策略与危机预警", 
+              analysis.supportStrategies, 
+              <ShieldAlert size={16} />, 
+              "amber"
+            )}
+
           </div>
         ) : (
-            <div className="text-center text-slate-400 py-10">分析服务暂时不可用</div>
+            <div className="text-center text-slate-400 py-10">暂无标签数据</div>
         )}
       </div>
     </div>

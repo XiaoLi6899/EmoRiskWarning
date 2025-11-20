@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -10,20 +11,37 @@ import {
   Activity,
   User,
   AlertOctagon,
-  Zap
+  Zap,
+  Download,
+  Clock,
+  Filter
 } from 'lucide-react';
 import MetricCard from './components/MetricCard';
-import MoodTrendChart from './components/MoodTrendChart';
+import MoodTrendChart, { MetricKey } from './components/MoodTrendChart';
 import InsightPanel from './components/InsightPanel';
 import TrajectoryMap from './components/TrajectoryMap';
 import { MOCK_STUDENT, MOCK_HISTORY, MOCK_TRAJECTORY } from './constants';
 
 const App: React.FC = () => {
+  // State for interactive elements
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('composite');
+  const [timeRange, setTimeRange] = useState<number>(14); // Default 14 days
+
   // Get the latest data point for metric cards
   const latestMetrics = MOCK_HISTORY[MOCK_HISTORY.length - 1].details;
   const previousMetrics = MOCK_HISTORY[MOCK_HISTORY.length - 2].details;
   
   const getTrend = (curr: number, prev: number) => curr > prev ? 'up' : curr < prev ? 'down' : 'neutral';
+
+  // Filter data based on selected time range
+  const chartData = useMemo(() => {
+    return MOCK_HISTORY.slice(-timeRange);
+  }, [timeRange]);
+
+  const handleMetricClick = (metric: MetricKey) => {
+    // If clicking the same metric, toggle back to composite, otherwise select the new metric
+    setSelectedMetric(prev => prev === metric ? 'composite' : metric);
+  };
 
   return (
     <div className="flex h-screen bg-[#f8fafc]">
@@ -73,7 +91,7 @@ const App: React.FC = () => {
              <span className="text-slate-900 font-medium">{MOCK_STUDENT.name}</span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="text" 
@@ -81,6 +99,12 @@ const App: React.FC = () => {
                 className="pl-10 pr-4 py-2 rounded-full bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 w-64 text-sm transition-all"
               />
             </div>
+            
+            <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-full shadow-sm hover:shadow transition-all">
+               <Download size={16} />
+               <span className="hidden sm:inline">导出报告</span>
+            </button>
+
             <button className="relative p-2 hover:bg-slate-50 rounded-full text-slate-500">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
@@ -142,7 +166,7 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* Metrics Grid (4 Core Metrics) */}
+          {/* Metrics Grid (4 Core Metrics) - Interactive */}
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <MetricCard 
               title="压力指数 (Stress)" 
@@ -150,7 +174,8 @@ const App: React.FC = () => {
               icon={<Activity size={20}/>} 
               trend={getTrend(latestMetrics.stress, previousMetrics.stress)}
               color="indigo"
-              suffix=""
+              isActive={selectedMetric === 'stress'}
+              onClick={() => handleMetricClick('stress')}
             />
             <MetricCard 
               title="攻击性倾向 (Aggression)" 
@@ -158,7 +183,8 @@ const App: React.FC = () => {
               icon={<Zap size={20}/>} 
               trend={getTrend(latestMetrics.aggression, previousMetrics.aggression)}
               color="red"
-              suffix=""
+              isActive={selectedMetric === 'aggression'}
+              onClick={() => handleMetricClick('aggression')}
             />
             <MetricCard 
               title="负面情绪 (Negative)" 
@@ -166,7 +192,8 @@ const App: React.FC = () => {
               icon={<AlertOctagon size={20}/>} 
               trend={getTrend(latestMetrics.negative, previousMetrics.negative)}
               color="blue"
-              suffix=""
+              isActive={selectedMetric === 'negative'}
+              onClick={() => handleMetricClick('negative')}
             />
              <MetricCard 
               title="情绪波动 (Instability)" 
@@ -174,7 +201,8 @@ const App: React.FC = () => {
               icon={<User size={20}/>} 
               trend={getTrend(latestMetrics.instability, previousMetrics.instability)}
               color="amber"
-              suffix=""
+              isActive={selectedMetric === 'instability'}
+              onClick={() => handleMetricClick('instability')}
             />
           </section>
 
@@ -186,19 +214,43 @@ const App: React.FC = () => {
               
               {/* Top: Mood Chart */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col h-[400px]">
-                <div className="flex justify-between items-center mb-2 flex-shrink-0">
+                {/* Chart Header with Controls */}
+                <div className="flex justify-between items-center mb-4 flex-shrink-0">
                   <div>
                     <h2 className="text-lg font-bold text-slate-800">综合心理预警监测</h2>
-                    <p className="text-xs text-slate-400 mt-1">基于面部识别数据的综合风险指数 (点击节点查看归因)</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {selectedMetric === 'composite' ? '基于面部识别数据的综合风险指数' : '单击卡片切换不同指标趋势'}
+                    </p>
                   </div>
-                  <div className="flex gap-2">
-                     <div className="flex items-center text-xs text-slate-500">
-                          <div className="w-2 h-2 bg-rose-500 rounded-full mr-1"></div> 预警触发
-                     </div>
+                  <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-1">
+                     <button 
+                        onClick={() => setTimeRange(7)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                           timeRange === 7 ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                     >
+                       7天
+                     </button>
+                     <button 
+                        onClick={() => setTimeRange(14)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                           timeRange === 14 ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                     >
+                       14天
+                     </button>
+                     <button 
+                        onClick={() => setTimeRange(30)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                           timeRange === 30 ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                        }`}
+                     >
+                       30天
+                     </button>
                   </div>
                 </div>
                 <div className="flex-1 min-h-0">
-                   <MoodTrendChart data={MOCK_HISTORY} />
+                   <MoodTrendChart data={chartData} activeMetric={selectedMetric} />
                 </div>
               </div>
 

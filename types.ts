@@ -1,3 +1,4 @@
+
 export enum RiskLevel {
   LOW = '低风险',
   MODERATE = '关注',
@@ -57,9 +58,12 @@ export interface StudentProfile {
 }
 
 export interface AIAnalysisResult {
-  rootCauseAnalysis: string; // 深层次原因推测
-  primaryFactor: 'academic' | 'family' | 'social' | 'unknown'; // 主要归因
-  trajectoryInsight: string; // 轨迹分析洞察
-  suggestedIntervention: string[]; // 建议干预手段
-  questionnaireType: string; // 推荐问卷 (如: 学业压力多维评估, 亲子关系量表)
+  // 1. 核心特征与行为模式
+  coreCharacteristics: string;
+  // 2. 心理健康情况评估
+  mentalHealthAssessment: string;
+  // 3. 发展潜力评估
+  developmentPotential: string;
+  // 4. 支持策略与危机预警应对
+  supportStrategies: string;
 }
