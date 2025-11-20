@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Brain, RefreshCw, Fingerprint, HeartPulse, Sprout, ShieldAlert, Tag } from 'lucide-react';
+import { Brain, RefreshCw, Fingerprint, HeartPulse, Sprout, ShieldAlert, Tag, ClipboardCheck } from 'lucide-react';
 import { StudentProfile, DailyEmotionMetrics, AIAnalysisResult, TrajectoryNode } from '../types';
 import { generateStudentReport } from '../services/geminiService';
 
@@ -104,7 +104,7 @@ const InsightPanel: React.FC<InsightPanelProps> = ({ student, history, trajector
       <div className="p-4 flex-1 overflow-y-auto custom-scrollbar bg-[#f8fafc]">
         {loading ? (
           <div className="flex flex-col gap-4 animate-pulse">
-             <div className="bg-slate-200 h-24 rounded-xl w-full"></div>
+             <div className="bg-slate-200 h-32 rounded-xl w-full"></div>
              <div className="bg-slate-200 h-24 rounded-xl w-full"></div>
              <div className="bg-slate-200 h-24 rounded-xl w-full"></div>
              <div className="bg-slate-200 h-24 rounded-xl w-full"></div>
@@ -112,6 +112,22 @@ const InsightPanel: React.FC<InsightPanelProps> = ({ student, history, trajector
         ) : analysis ? (
           <div className="grid grid-cols-1 gap-4 pb-2">
             
+            {/* 0. Overall Evaluation (Featured Card) */}
+            <div className="bg-gradient-to-br from-white to-slate-50 rounded-xl p-4 border border-indigo-100 shadow-sm relative overflow-hidden group">
+               <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+               <div className="flex items-start gap-3">
+                  <div className="p-2 bg-indigo-100 text-indigo-600 rounded-full mt-0.5 shrink-0">
+                    <ClipboardCheck size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800 text-sm mb-1.5">总体评价</h3>
+                    <p className="text-xs text-slate-600 leading-relaxed text-justify">
+                      {analysis.overallEvaluation}
+                    </p>
+                  </div>
+               </div>
+            </div>
+
             {/* 1. Core Characteristics */}
             {renderCard(
               "核心特征与行为模式", 

@@ -58,6 +58,8 @@ export interface StudentProfile {
 }
 
 export interface AIAnalysisResult {
+  // 0. 总体评价 (新增)
+  overallEvaluation: string;
   // 1. 核心特征与行为模式
   coreCharacteristics: string;
   // 2. 心理健康情况评估
