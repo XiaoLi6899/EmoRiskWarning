@@ -270,15 +270,15 @@ const App: React.FC = () => {
               </div>
 
               {/* Bottom: Virtual Trajectory Map */}
-              <div className="h-[400px]">
+              <div className="h-[600px]">
                 <TrajectoryMap data={MOCK_TRAJECTORY} />
               </div>
 
             </div>
 
             {/* RIGHT COLUMN: AI Insight (4 cols) */}
-            <div className="lg:col-span-4 flex flex-col h-[824px]"> 
-              {/* Height matches 400 (chart) + 400 (map) + 24 (gap) */}
+            <div className="lg:col-span-4 flex flex-col h-[1024px]"> 
+              {/* Height matches 400 (chart) + 600 (map) + 24 (gap) */}
               <InsightPanel student={MOCK_STUDENT} history={MOCK_HISTORY} trajectory={MOCK_TRAJECTORY} />
             </div>
 
